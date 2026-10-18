@@ -1,4 +1,5 @@
 using TMPro;
+using Unity.Services.Analytics;
 using UnityEngine;
 
 public class CarrotLogic : MonoBehaviour
@@ -26,6 +27,8 @@ public class CarrotLogic : MonoBehaviour
         {
             total += PlayerPrefs.GetInt("Carrot_" + i, 0);
         }
+        AnalyticsManager.instance.ColectCarrot(carrotID);
         return total;
+
     }
 }
