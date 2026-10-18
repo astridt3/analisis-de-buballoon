@@ -15,7 +15,7 @@ public class CarrotLogic : MonoBehaviour
             PlayerPrefs.Save();
             int total = GetTotalCarrots();
             CarrotText.text = total.ToString();
-
+            AnalyticsManager.instance.ColectCarrot(carrotID);
             Destroy(gameObject);
         }
     }
@@ -27,7 +27,6 @@ public class CarrotLogic : MonoBehaviour
         {
             total += PlayerPrefs.GetInt("Carrot_" + i, 0);
         }
-        AnalyticsManager.instance.ColectCarrot(carrotID);
         return total;
 
     }
