@@ -1,4 +1,6 @@
 ﻿
+using System;
+using Unity.VisualScripting;
 using UnityEngine;
 public class HealthManager : MonoBehaviour
 {
@@ -53,7 +55,16 @@ public class HealthManager : MonoBehaviour
 
     public void Die()
     {
-        
+        // analytic event register
+        try
+        {
+            AnalyticsManager.instance.PlayerDied();
+        }
+        catch (Exception e)
+        {
+            Debug.LogException(e);
+        }
+
         if (respawnCount >= 2)
         {
             Time.timeScale = 0;
