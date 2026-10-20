@@ -18,7 +18,7 @@ public class CarrotLogic : MonoBehaviour
             CarrotText.text = total.ToString();
             try
             {
-                AnalyticsManager.instance.ColectCarrot(total);
+                AnalyticsManager.instance.ColectCarrot(carrotID);
             }
             catch (Exception e)
             {
