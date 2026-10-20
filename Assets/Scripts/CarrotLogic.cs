@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using Unity.Services.Analytics;
 using UnityEngine;
@@ -15,7 +16,14 @@ public class CarrotLogic : MonoBehaviour
             PlayerPrefs.Save();
             int total = GetTotalCarrots();
             CarrotText.text = total.ToString();
-            AnalyticsManager.instance.ColectCarrot(carrotID);
+            try
+            {
+                AnalyticsManager.instance.ColectCarrot(total);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
             Destroy(gameObject);
         }
     }

@@ -28,7 +28,7 @@ public class HealthManager : MonoBehaviour
     {
         currentHealth -= amount;
         Debug.Log($"Vida actual: {currentHealth}");
-        AudioClip selectedClip = (Random.Range(0, 2) == 0) ? hurt1 : hurt2;
+        AudioClip selectedClip = (UnityEngine.Random.Range(0, 2) == 0) ? hurt1 : hurt2;
         SoundManager.instance.PlaySound(selectedClip);
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
         heartManager.UpdateHeartUI((int)currentHealth);
