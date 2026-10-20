@@ -13,7 +13,7 @@ public class PlayerDiedEvent : Unity.Services.Analytics.Event
 
 public class ColectCarrotEvent : Unity.Services.Analytics.Event
 {
-    public ColectCarrotEvent() : base("ColectCarrot") { }
+    public ColectCarrotEvent() : base("ColectCarrotEvent") { }
 
     public int Carrot_score { set { SetParameter("carrotID", value); } }
 }
