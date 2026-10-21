@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -20,6 +21,16 @@ public class HeartManager : MonoBehaviour
             else
             {
                 heartImages[i].sprite = emptyHeart;
+
+                // analytic event register
+                try
+                {
+                    AnalyticsManager.instance.emptyHeartCount();
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                }
             }
         }
     }

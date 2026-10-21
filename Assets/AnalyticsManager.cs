@@ -56,4 +56,28 @@ public class AnalyticsManager : MonoBehaviour
 
         AnalyticsService.Instance.RecordEvent(evt);
     }
+    public void bubbleMode()
+    {
+        BubbleModeEvent evt = new BubbleModeEvent { };
+
+        AnalyticsService.Instance.RecordEvent(evt);
+    }
+    public void grappler() //script puesto como gancho
+    {
+        grapplerEvent evt = new grapplerEvent { };
+
+        AnalyticsService.Instance.RecordEvent(evt);
+    }
+    public void coinCount()
+    {
+        coinEvent evt = new coinEvent { };
+
+        AnalyticsService.Instance.RecordEvent(evt);
+    }
+    public void emptyHeartCount()
+    {
+        emptyHeartCountEvent evt = new emptyHeartCountEvent { };
+
+        AnalyticsService.Instance.RecordEvent(evt);
+    }
 }

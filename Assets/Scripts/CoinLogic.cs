@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class CoinLogic : MonoBehaviour
@@ -7,6 +8,15 @@ public class CoinLogic : MonoBehaviour
         if (collision.CompareTag("Player"))
         {
             MedalManager.instance.AddCoin();
+            // analytic event register
+            try
+            {
+                AnalyticsManager.instance.coinCount();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
             Destroy(gameObject);
         }
     }

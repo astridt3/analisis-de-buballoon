@@ -1,4 +1,5 @@
 
+using System;
 using UnityEngine;
 
 public class MovementManager : MonoBehaviour
@@ -84,6 +85,15 @@ public class MovementManager : MonoBehaviour
                     anima.SetBool("Skinny", false);
                     anima.SetBool("Gording", true);
                     SoundManager.instance.PlaySound(inflate);
+                    // analytic event register
+                    try
+                    {
+                        AnalyticsManager.instance.bubbleMode();
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogException(e);
+                    }
                 }
 
             }
@@ -110,7 +120,7 @@ public class MovementManager : MonoBehaviour
                     jumpSound();
                     if(characterBehaviour.isGrounded == false)
                     {
-                        AudioClip selectedClip = (Random.Range(0, 2) == 0) ? impulse1 : impulse2;
+                        AudioClip selectedClip = (UnityEngine.Random.Range(0, 2) == 0) ? impulse1 : impulse2;
                         SoundManager.instance.PlaySound(selectedClip);
                     }
                 }
@@ -151,7 +161,7 @@ public class MovementManager : MonoBehaviour
 
     private void jumpSound()
     {
-        AudioClip selectedClip = (Random.Range(0, 2) == 0) ? jump1 : jump2;
+        AudioClip selectedClip = (UnityEngine.Random.Range(0, 2) == 0) ? jump1 : jump2;
         SoundManager.instance.PlaySound(selectedClip);
     }
 

@@ -22,3 +22,19 @@ public class PlayerVictoryEvent : Unity.Services.Analytics.Event
 {
     public PlayerVictoryEvent() : base("player_won") { }
 }
+public class BubbleModeEvent : Unity.Services.Analytics.Event
+{
+    public BubbleModeEvent() : base("bubbleMode_Active") { }
+}
+public class grapplerEvent : Unity.Services.Analytics.Event
+{
+    public grapplerEvent() : base("grapplerEvent_Active") { }
+}
+public class coinEvent : Unity.Services.Analytics.Event
+{
+    public coinEvent() : base("coinID") { }
+}
+public class emptyHeartCountEvent : Unity.Services.Analytics.Event
+{
+    public emptyHeartCountEvent() : base("emptyHeart_Count") { }
+}

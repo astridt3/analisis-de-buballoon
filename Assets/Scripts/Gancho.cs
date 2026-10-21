@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class Gancho : MonoBehaviour
@@ -42,6 +43,15 @@ public class Gancho : MonoBehaviour
                         closest = obj.transform;
                     }
                 }
+            }
+            // analytic event register
+            try
+            {
+                AnalyticsManager.instance.grappler();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
             }
 
             if (closest != null)
