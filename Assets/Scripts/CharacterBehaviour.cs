@@ -1,7 +1,9 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 //using UnityEditor.Tilemaps;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class CharacterBehaviour : MonoBehaviour
 {
@@ -93,6 +95,17 @@ public class CharacterBehaviour : MonoBehaviour
         {
             Time.timeScale = 0;
             victoria.SetActive(true);
+
+            // analytic event register
+            try
+            {
+                AnalyticsManager.instance.PlayerVictory();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+
             SoundManager.instance.PlaySound(victory);
 
             firstCheckpointSet = false;

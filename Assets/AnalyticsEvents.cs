@@ -17,3 +17,8 @@ public class ColectCarrotEvent : Unity.Services.Analytics.Event
 
     public int Carrot_score { set { SetParameter("carrotID", value); } }
 }
+
+public class PlayerVictoryEvent : Unity.Services.Analytics.Event
+{
+    public PlayerVictoryEvent() : base("player_won") { }
+}

@@ -50,4 +50,10 @@ public class AnalyticsManager : MonoBehaviour
         AnalyticsService.Instance.RecordEvent(evt);
         AnalyticsService.Instance.Flush();
     }
+    public void PlayerVictory()
+    {
+        PlayerVictoryEvent evt = new PlayerVictoryEvent { };
+
+        AnalyticsService.Instance.RecordEvent(evt);
+    }
 }
