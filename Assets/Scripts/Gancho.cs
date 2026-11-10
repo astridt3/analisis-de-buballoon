@@ -44,15 +44,6 @@ public class Gancho : MonoBehaviour
                     }
                 }
             }
-            // analytic event register
-            try
-            {
-                AnalyticsManager.instance.grappler();
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-            }
 
             if (closest != null)
             {
@@ -68,6 +59,16 @@ public class Gancho : MonoBehaviour
                 _distanceJoint.autoConfigureDistance = false;
                 _distanceJoint.distance = Vector2.Distance(transform.position, targetPoint);
                 _distanceJoint.enableCollision = true;
+
+                // Analytics: gancho utilizado correctamente.
+                try
+                {
+                    AnalyticsManager.instance.RegisterHookUsed();
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                }
             }
         }
 

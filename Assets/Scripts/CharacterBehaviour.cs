@@ -27,6 +27,20 @@ public class CharacterBehaviour : MonoBehaviour
     public Vector3 checkpointPosition;
     private bool firstCheckpointSet = false;
 
+    private bool levelFinished = false;
+
+    [Header("Checkpoint Analytics")]
+    [SerializeField] private CheckpointFlag checkpoint1;
+    [SerializeField] private CheckpointFlag checkpoint2;
+
+    [SerializeField] private float skipDetectionOffset = 0.5f;
+
+    private bool checkpoint1Reached = false;
+    private bool checkpoint2Reached = false;
+
+    private bool checkpoint1Skipped = false;
+    private bool checkpoint2Skipped = false;
+
     private void Awake()
     {
         healthManager = GetComponent<HealthManager>();
@@ -38,6 +52,44 @@ public class CharacterBehaviour : MonoBehaviour
         lastGroundPosition = transform.position;
         checkpointPosition = transform.position;
     }
+
+    private void Start()
+    {
+        AnalyticsManager.instance.BeginLevelAttempt();
+    }
+
+    private void Update()
+    {
+        CheckForSkippedCheckpoints();
+    }
+
+    private void CheckForSkippedCheckpoints()
+    {
+        float playerX = transform.position.x;
+
+        // Checkpoint 1
+        if (!checkpoint1Reached && !checkpoint1Skipped &&
+            playerX > checkpoint1.transform.position.x + skipDetectionOffset)
+        {
+            checkpoint1Skipped = true;
+
+            AnalyticsManager.instance.RegisterCheckpointSkipped(1);
+
+            Debug.Log("Checkpoint 1 omitido");
+        }
+
+        // Checkpoint 2
+        if (!checkpoint2Reached && !checkpoint2Skipped &&
+            playerX > checkpoint2.transform.position.x + skipDetectionOffset)
+        {
+            checkpoint2Skipped = true;
+
+            AnalyticsManager.instance.RegisterCheckpointSkipped(2);
+
+            Debug.Log("Checkpoint 2 omitido");
+        }
+    }
+
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.gameObject.CompareTag("Ground") || collision.gameObject.CompareTag("Cloud"))
@@ -91,15 +143,19 @@ public class CharacterBehaviour : MonoBehaviour
             rb.velocity = Vector2.zero;
             rb.AddForce(direccion * impulse, ForceMode2D.Impulse);
         }
-        if (collision.gameObject.CompareTag("Exit"))
+
+        if (collision.gameObject.CompareTag("Exit") && !levelFinished)
         {
+            levelFinished = true;
+
+            AnalyticsManager.instance.RegisterSectorCompleted(3);
+
             Time.timeScale = 0;
             victoria.SetActive(true);
 
-            // analytic event register
             try
             {
-                AnalyticsManager.instance.PlayerVictory();
+                AnalyticsManager.instance.RegisterLevelCollectibles();
             }
             catch (Exception e)
             {
@@ -127,6 +183,7 @@ public class CharacterBehaviour : MonoBehaviour
             }
         }
     }
+
     private void OnCollisionExit2D(Collision2D collision)
     {
         if (collision.gameObject.CompareTag("Ground") || collision.gameObject.CompareTag("Cloud"))
@@ -153,6 +210,7 @@ public class CharacterBehaviour : MonoBehaviour
             SetCheckpoint(collision.gameObject);
         }
     }
+
     public void ResetPhysicsWithDelay(Vector3 respawnPosition)
     {
         StartCoroutine(ResetPhysicsCoroutine(respawnPosition));
@@ -168,20 +226,44 @@ public class CharacterBehaviour : MonoBehaviour
         rb.simulated = true;
         isGrounded = false;
     }
+
     public void RespawnAtCheckpoint()
     {
         transform.position = checkpointPosition + Vector3.up * 0.5f;
         ResetPhysicsWithDelay(checkpointPosition);
     }
+
     public void RespawnAtLastGround()
     {
         transform.position = lastGroundPosition + Vector3.up * 0.5f;
         rb.velocity = Vector2.zero;
         rb.angularVelocity = 0;
     }
+
     public void SetCheckpoint(GameObject newCheckpoint)
     {
         checkpointPosition = newCheckpoint.transform.position;
+
+        CheckpointFlag flag = newCheckpoint.GetComponent<CheckpointFlag>();
+
+        if (flag == null)
+        {
+            Debug.LogWarning("El checkpoint no tiene CheckpointFlag.");
+            return;
+        }
+
+        switch (flag.CheckpointId)
+        {
+            case 1:
+                checkpoint1Reached = true;
+                AnalyticsManager.instance.RegisterSectorCompleted(1);
+                break;
+
+            case 2:
+                checkpoint2Reached = true;
+                AnalyticsManager.instance.RegisterSectorCompleted(2);
+                break;
+        }
     }
 }
 

@@ -88,7 +88,7 @@ public class MovementManager : MonoBehaviour
                     // analytic event register
                     try
                     {
-                        AnalyticsManager.instance.bubbleMode();
+                        AnalyticsManager.instance.RegisterBubbleUsed();
                     }
                     catch (Exception e)
                     {

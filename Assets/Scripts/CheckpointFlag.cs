@@ -11,6 +11,11 @@ public class CheckpointFlag : MonoBehaviour
     private SpriteRenderer spriteRenderer;
     private bool animating = false;
 
+    [SerializeField, Min(1)] private int checkpointId = 1;
+
+    public int CheckpointId => checkpointId;
+
+
     private void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();

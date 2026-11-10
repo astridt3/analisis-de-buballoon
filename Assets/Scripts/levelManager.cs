@@ -7,8 +7,9 @@ public class levelManager : MonoBehaviour
 {
     private bool isPaused = false;
 
-   public void restart()
+    public void restart()
     {
+        AnalyticsManager.instance.ResetAttemptData();
         SceneManager.LoadScene("Level 1");
     }
     public void mainmenu()
@@ -38,7 +39,7 @@ public class levelManager : MonoBehaviour
 
     private void Update()
     {
-       if(SceneManager.GetActiveScene().name != "Main Menu" || SceneManager.GetActiveScene().name != "Controls")
+        if(SceneManager.GetActiveScene().name != "Main Menu" || SceneManager.GetActiveScene().name != "Controls")
         {
             if(Input.GetKeyDown(KeyCode.Escape))
             {

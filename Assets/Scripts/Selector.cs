@@ -16,8 +16,14 @@ public class Selector : MonoBehaviour
     public string scene;
     public MedalManager medalManager;
 
+    private float levelSelectStartTime;
+    private bool levelSelectTimerRunning;
+
     public void Start()
     {
+        levelSelectStartTime = Time.realtimeSinceStartup;
+        levelSelectTimerRunning = true;
+
         panel.SetActive(false);
         image1.SetActive(false);
         image2.SetActive(false);
@@ -26,6 +32,7 @@ public class Selector : MonoBehaviour
         image5.SetActive(false);
         image6.SetActive(false);
     }
+
     public void SeePanel()
     {
         panel.SetActive(true);
@@ -39,13 +46,19 @@ public class Selector : MonoBehaviour
  
     public void GoToScene1()
     {
+        RegisterLevelSelectTime();
+
+        AnalyticsManager.instance.ResetAttemptData();
         MedalManager.instance.ResetCoins();
         SceneManager.LoadScene("Level 1");
     }
+
     public void GoToMenu()
     {
+        RegisterLevelSelectTime();
         SceneManager.LoadScene("Main Menu");
     }
+
     public void ClosePanel()
     {
         panel.SetActive(false);
@@ -56,6 +69,18 @@ public class Selector : MonoBehaviour
         image5.SetActive(false);
         image6.SetActive(false);
       
+    }
+
+    private void RegisterLevelSelectTime()
+    {
+        if (!levelSelectTimerRunning)
+            return;
+
+        float elapsedTime = Time.realtimeSinceStartup - levelSelectStartTime;
+
+        AnalyticsManager.instance.RegisterLevelSelectTime(elapsedTime);
+
+        levelSelectTimerRunning = false;
     }
 }
 

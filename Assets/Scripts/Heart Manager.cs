@@ -21,16 +21,6 @@ public class HeartManager : MonoBehaviour
             else
             {
                 heartImages[i].sprite = emptyHeart;
-
-                // analytic event register
-                try
-                {
-                    AnalyticsManager.instance.emptyHeartCount();
-                }
-                catch (Exception e)
-                {
-                    Debug.LogException(e);
-                }
             }
         }
     }

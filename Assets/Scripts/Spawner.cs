@@ -10,13 +10,9 @@ public class Spawner : MonoBehaviour
 
     void Start()
     {
-
         InvokeRepeating("SpawnSpawner", spawnTime, spawnDelay);
     }
-    void Update()
-    {
 
-    }
     void SpawnSpawner()
     {
         Instantiate(bubbleSpawn, spawner.transform.position, spawner.transform.rotation);

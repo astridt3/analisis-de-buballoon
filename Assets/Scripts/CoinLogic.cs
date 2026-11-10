@@ -11,7 +11,7 @@ public class CoinLogic : MonoBehaviour
             // analytic event register
             try
             {
-                AnalyticsManager.instance.coinCount();
+                AnalyticsManager.instance.RegisterBowCollected();
             }
             catch (Exception e)
             {

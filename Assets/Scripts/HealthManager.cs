@@ -13,6 +13,7 @@ public class HealthManager : MonoBehaviour
     [SerializeField] private AudioClip hurt1;
     [SerializeField] private AudioClip hurt2;
     private CharacterBehaviour character;
+
     void Start()
     {
         currentHealth = maxHealth;
@@ -38,6 +39,7 @@ public class HealthManager : MonoBehaviour
             Die();
             return;
         }
+
         if (fromLava)
         {
             if (currentHealth >= 1)
@@ -52,13 +54,12 @@ public class HealthManager : MonoBehaviour
         
     }
 
-
     public void Die()
     {
-        // analytic event register
         try
         {
-            AnalyticsManager.instance.PlayerDied();
+            AnalyticsManager.instance.RegisterPlayerDeath(character.transform.position);
+            AnalyticsManager.instance.RegisterPlayersMaxTime(character.transform.position);
         }
         catch (Exception e)
         {
@@ -72,12 +73,20 @@ public class HealthManager : MonoBehaviour
             Debug.Log("Jugador ha muerto definitivamente");
             return;
         }
+
         respawnCount++;
+
+        try
+        {
+            AnalyticsManager.instance.RegisterLifeLost();
+        }
+        catch (Exception e)
+        {
+            Debug.LogException(e);
+        }
+
         currentHealth = maxHealth - respawnCount;
         heartManager.UpdateHeartUI((int)currentHealth);
         character.RespawnAtCheckpoint();
-        //currentHealth = maxHealth;
-        //heartManager.UpdateHeartUI((int)currentHealth);
-        //character.RespawnAtCheckpoint();
     }
 }
