@@ -12,14 +12,20 @@ public class levelManager : MonoBehaviour
         AnalyticsManager.instance.ResetAttemptData();
         SceneManager.LoadScene("Level 1");
     }
+
     public void mainmenu()
     {
+        RegisterAbandonedAttempt();
+
+        Time.timeScale = 1f;
         SceneManager.LoadScene("Main Menu");
     }
 
     public void salir()
     {
-        Application.Quit(); 
+        RegisterAbandonedAttempt();
+
+        Application.Quit();
     }
 
     public void pause()
@@ -46,5 +52,18 @@ public class levelManager : MonoBehaviour
                 pause();
             }
         }
+    }
+
+    private void RegisterAbandonedAttempt()
+    {
+        CharacterBehaviour character = FindObjectOfType<CharacterBehaviour>();
+
+        if (character == null || character.healthManager == null)
+            return;
+
+        if (AnalyticsManager.instance == null)
+            return;
+
+        AnalyticsManager.instance.EndLevelAttempt("abandoned", character.transform.position, character.GetCurrentSectionId(), Mathf.RoundToInt(character.healthManager.currentHealth));
     }
 }

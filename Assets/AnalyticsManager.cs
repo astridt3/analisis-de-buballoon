@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Unity.Services.Analytics;
 using Unity.Services.Core;
 using UnityEngine;
@@ -22,10 +23,32 @@ public class AnalyticsManager : MonoBehaviour
     private bool sector2Recorded;
     private bool sector3Recorded;
 
+    // RUN TRACKING
+    private string currentRunId;
+    private const string levelId = "level_1";
+
+    private float runStartTime;
+    private bool runEnded;
+
+    private int lastCheckpointId;
+    private Vector2 lastPlayerPosition;
+
+    private int deathCount;
+
+    private HashSet<string> reachedSections = new HashSet<string>();
+
+    private bool balloonUsedThisRun;
+
+    private string currentSessionId;
+
+    private string lastAction = "none";
+
     public void Awake()
     {
         instance = this;
         DontDestroyOnLoad(gameObject);
+
+        currentSessionId = Guid.NewGuid().ToString();
     }
 
     // Start is called before the first frame update
@@ -55,24 +78,35 @@ public class AnalyticsManager : MonoBehaviour
         AnalyticsService.Instance.RecordEvent(new DeathCoordinatesEvent());
     }
 
-    public void RegisterPlayerDeath(Vector3 deathPosition)
+    public void RegisterPlayerDeath(string causeId, string sectionId, Vector3 deathPosition, int livesRemaining)
     {
-        // Registra que el jugador murió.
-        AnalyticsService.Instance.RecordEvent(new PlayerDiedEvent());
+        deathCount++;
 
-        // Registra dónde ocurrió la muerte.
-        DeathCoordinatesEvent evt = new DeathCoordinatesEvent
+        PlayerDiedEvent evt = new PlayerDiedEvent
         {
-            X = deathPosition.x,
-            Y = deathPosition.y
+            DeathId = deathCount,
+            CauseId = causeId,
+            SectionId = sectionId,
+            PositionX = deathPosition.x,
+            PositionY = deathPosition.y,
+            LivesRemaining = livesRemaining
         };
 
         AnalyticsService.Instance.RecordEvent(evt);
     }
 
-    public void RegisterLifeLost()
+    public void RegisterLifeLost(string sourceId, string sectionId, Vector3 position, int livesRemaining)
     {
-        AnalyticsService.Instance.RecordEvent(new LostLifeEvent());
+        LifeLostEvent evt = new LifeLostEvent
+        {
+            SourceId = sourceId,
+            SectionId = sectionId,
+            PositionX = position.x,
+            PositionY = position.y,
+            LivesRemaining = livesRemaining
+        };
+
+        AnalyticsService.Instance.RecordEvent(evt);
     }
 
     // ZANAHORIAS
@@ -90,29 +124,84 @@ public class AnalyticsManager : MonoBehaviour
     public void RegisterCarrotCollected(int carrotID)
     {
         carrotsCollected++;
-        ColectCarrot(carrotID);
+
+        CarrotCollectedEvent evt = new CarrotCollectedEvent
+        {
+            CollectibleId = carrotID,
+            CarrotsCount = carrotsCollected,
+            CarrotsTotal = 3
+        };
+
+        AnalyticsService.Instance.RecordEvent(evt);
+    }
+
+    private void RegisterCarrotCollectionSummary()
+    {
+        CarrotCollectionSummaryEvent evt = new CarrotCollectionSummaryEvent
+        {
+            CarrotsCount = carrotsCollected,
+            CarrotsTotal = 3,
+            AllThreeCollected = carrotsCollected == 3
+        };
+
+        AnalyticsService.Instance.RecordEvent(evt);
     }
 
     // MOÑOS
 
-    public void coinCount()
+    public void BowCollected()
     {
-        AnalyticsService.Instance.RecordEvent(new coinEvent());
+        AnalyticsService.Instance.RecordEvent(new BowCollectedEvent());
     }
 
-    public void RegisterBowCollected()
+    public void RegisterBowCollected(int bowId, string sectionId, Vector3 position)
     {
         bowsCollected++;
-        coinCount();
+
+        BowCollectedEvent evt = new BowCollectedEvent
+        {
+            BowId = bowId,
+            SectionId = sectionId,
+            PositionX = position.x,
+            PositionY = position.y
+        };
+
+        AnalyticsService.Instance.RecordEvent(evt);
     }
 
     // GANCHO
 
-    public void RegisterHookUsed()
+    public void RegisterHookActivated(int hookId, string sectionId, string activationResult, bool used)
     {
-        hookUsed = true;
+        HookActivatedEvent evt = new HookActivatedEvent
+        {
+            HookId = hookId,
+            SectionId = sectionId,
+            ActivationResult = activationResult,
+            Used = used
+        };
 
-        AnalyticsService.Instance.RecordEvent(new grapplerEvent());
+        AnalyticsService.Instance.RecordEvent(evt);
+    }
+
+    private void RegisterHookOpportunities()
+    {
+        HookPoint[] hookPoints = FindObjectsOfType<HookPoint>();
+
+        foreach (HookPoint hookPoint in hookPoints)
+        {
+            if (!reachedSections.Contains(hookPoint.SectionId))
+                continue;
+
+            HookOpportunityResolvedEvent evt = new HookOpportunityResolvedEvent
+            {
+                HookId = hookPoint.HookId,
+                SectionId = hookPoint.SectionId,
+                Used = hookPoint.Used
+            };
+
+            AnalyticsService.Instance.RecordEvent(evt);
+        }
     }
 
     // GLOBOS
@@ -122,6 +211,39 @@ public class AnalyticsManager : MonoBehaviour
         bubbleUsed = true;
 
         AnalyticsService.Instance.RecordEvent(new BubbleModeEvent());
+    }
+
+    public void RegisterBalloonActivated(string sectionId, Vector3 position)
+    {
+        if (balloonUsedThisRun)
+            return;
+
+        balloonUsedThisRun = true;
+
+        BalloonActivatedEvent evt = new BalloonActivatedEvent
+        {
+            OpportunityId = 1,
+            SectionId = sectionId,
+            Used = true,
+            PositionX = position.x,
+            PositionY = position.y
+        };
+
+        AnalyticsService.Instance.RecordEvent(evt);
+    }
+
+    private void RegisterBalloonOpportunityResolved(string sectionId, Vector3 position)
+    {
+        BalloonOpportunityResolvedEvent evt = new BalloonOpportunityResolvedEvent
+        {
+            OpportunityId = 1,
+            SectionId = sectionId,
+            Used = balloonUsedThisRun,
+            PositionX = position.x,
+            PositionY = position.y
+        };
+
+        AnalyticsService.Instance.RecordEvent(evt);
     }
 
     // FINALIZACIÓN DEL NIVEL
@@ -158,22 +280,72 @@ public class AnalyticsManager : MonoBehaviour
         carrotsCollected = 0;
         bowsCollected = 0;
 
+        lastAction = "none";
+
         hookUsed = false;
         bubbleUsed = false;
+        balloonUsedThisRun = false;
     }
 
     // TIEMPOS
 
     public void BeginLevelAttempt()
     {
+        currentRunId = Guid.NewGuid().ToString();
+
+        runStartTime = Time.realtimeSinceStartup;
+        runEnded = false;
+        lastAction = "none";
+
+        deathCount = 0;
+        balloonUsedThisRun = false;
+        carrotsCollected = 0;
+
+        lastCheckpointId = 0;
+        lastPlayerPosition = Vector2.zero;
+
+        // Mantener el sistema de tiempo por sectores existente.
         attemptStartTime = Time.time;
         sectorStartTime = Time.time;
-
         attemptTimerStarted = true;
 
         sector1Recorded = false;
         sector2Recorded = false;
         sector3Recorded = false;
+
+        reachedSections.Clear();
+        reachedSections.Add("start_to_cp1");
+
+        HookPoint[] hookPoints = FindObjectsOfType<HookPoint>();
+
+        foreach (HookPoint hookPoint in hookPoints)
+        {
+            hookPoint.ResetUsage();
+        }
+
+        LevelRunStartedEvent evt = new LevelRunStartedEvent
+        {
+            RunId = currentRunId
+        };
+
+        AnalyticsService.Instance.RecordEvent(evt);
+    }
+
+    public void RegisterCheckpointReached(int checkpointId, string sectionId)
+    {
+        if (!attemptTimerStarted)
+            return;
+
+        float elapsedSeconds = Time.time - sectorStartTime;
+
+        CheckpointReachedEvent evt = new CheckpointReachedEvent
+        {
+            CheckpointId = checkpointId,
+            SectionId = sectionId,
+            ElapsedSeconds = elapsedSeconds
+        };
+
+        AnalyticsService.Instance.RecordEvent(evt);
     }
 
     public void RegisterSectorCompleted(int sectorId)
@@ -242,13 +414,28 @@ public class AnalyticsManager : MonoBehaviour
         AnalyticsService.Instance.RecordEvent(evt);
     }
 
+    public void RegisterLevelSelectionCompleted(string selectedLevelId, float durationSeconds)
+    {
+        LevelSelectionCompletedEvent evt = new LevelSelectionCompletedEvent
+        {
+            SelectedLevelId = selectedLevelId,
+            DurationSeconds = durationSeconds,
+            SessionId = currentSessionId
+        };
+
+        AnalyticsService.Instance.RecordEvent(evt);
+    }
+
     // CHECKPOINT SKIP
 
-    public void RegisterCheckpointSkipped(int checkpointId)
+    public void RegisterCheckpointSkipped(int checkpointId, int nextCheckpointId, Vector3 playerPosition)
     {
         CheckpointSkippedEvent evt = new CheckpointSkippedEvent
         {
-            CheckpointId = checkpointId
+            CheckpointId = checkpointId,
+            NextCheckpointId = nextCheckpointId,
+            PositionX = playerPosition.x,
+            PositionY = playerPosition.y
         };
 
         AnalyticsService.Instance.RecordEvent(evt);
@@ -256,13 +443,83 @@ public class AnalyticsManager : MonoBehaviour
 
     // BURBUJAS VERDES
 
-    public void RegisterGreenBubble(int bubbleId)
+    public void RegisterGreenBubble(int bubbleId, string sectionId, bool lifeLost, Vector3 position)
     {
-        GreenBubbleEvent evt = new GreenBubbleEvent
+        GreenBubbleTouchedEvent evt = new GreenBubbleTouchedEvent
         {
-            BubbleId = bubbleId
+            BubbleId = bubbleId,
+            SectionId = sectionId,
+            LifeLost = lifeLost,
+            PositionX = position.x,
+            PositionY = position.y
         };
 
         AnalyticsService.Instance.RecordEvent(evt);
+    }
+
+    // nuevo
+    public void RegisterLastCheckpoint(int checkpointId)
+    {
+        lastCheckpointId = checkpointId;
+    }
+
+    public void EndLevelAttempt(string endReason, Vector3 playerPosition, string sectionId, int livesRemaining)
+    {
+        if (!attemptTimerStarted || runEnded)
+            return;
+
+        runEnded = true;
+        attemptTimerStarted = false;
+
+        float duration = Time.realtimeSinceStartup - runStartTime;
+
+        RegisterHookOpportunities();
+        RegisterBalloonOpportunityResolved(sectionId, playerPosition);
+        RegisterCarrotCollectionSummary();
+
+        string finalAction = lastAction;
+
+        if (endReason == "completed")
+        {
+            finalAction = "completed";
+        }
+        else if (endReason == "defeated")
+        {
+            finalAction = "defeated";
+        }
+        else if (finalAction == "none")
+        {
+            finalAction = "exit_button";
+        }
+
+        LevelRunEndedEvent evt = new LevelRunEndedEvent
+        {
+            RunId = currentRunId,
+            LevelId = levelId,
+            DurationSeconds = duration,
+            EndReason = endReason,
+            LastPositionX = playerPosition.x,
+            LastPositionY = playerPosition.y,
+            LastCheckpointId = lastCheckpointId,
+            LastAction = finalAction,
+            LivesRemaining = Mathf.Max(0, livesRemaining)
+        };
+
+        AnalyticsService.Instance.RecordEvent(evt);
+
+        Debug.Log($"Partida finalizada: {endReason} | {duration:F2} segundos");
+    }
+
+    public void RegisterSectionReached(string sectionId)
+    {
+        reachedSections.Add(sectionId);
+    }
+
+    public void RegisterLastAction(string action)
+    {
+        if (!attemptTimerStarted || string.IsNullOrEmpty(action))
+            return;
+
+        lastAction = action;
     }
 }

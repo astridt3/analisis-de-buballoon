@@ -12,6 +12,8 @@ public class SodaBubble : MonoBehaviour
     private static int nextBubbleId = 0;
     private int bubbleId;
 
+    public int BubbleId => bubbleId;
+
     private void Awake()
     {
         anima = GetComponent<Animator>();
@@ -36,8 +38,6 @@ public class SodaBubble : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Player") && !isExploding)
         {
-            AnalyticsManager.instance.RegisterGreenBubble(bubbleId);
-
             TriggerExplosion();
 
             AudioClip selectedClip = (Random.Range(0, 2) == 0) ? pop1 : pop2;

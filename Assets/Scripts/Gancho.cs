@@ -15,6 +15,8 @@ public class Gancho : MonoBehaviour
     private bool isClimbing = false;
     private Vector2 targetPoint;
 
+    private HookPoint currentHookPoint;
+
     void Start()
     {
         _distanceJoint.enabled = false;
@@ -48,6 +50,17 @@ public class Gancho : MonoBehaviour
             if (closest != null)
             {
                 targetPoint = closest.position;
+
+                currentHookPoint = closest.GetComponent<HookPoint>();
+
+                if (currentHookPoint == null)
+                {
+                    Debug.LogWarning("El Baston no tiene HookPoint.");
+                    return;
+                }
+
+                currentHookPoint.MarkAsUsed();
+
                 _lineRenderer.SetPosition(0, targetPoint);
                 _lineRenderer.SetPosition(1, brazo.transform.position);
 
@@ -63,7 +76,7 @@ public class Gancho : MonoBehaviour
                 // Analytics: gancho utilizado correctamente.
                 try
                 {
-                    AnalyticsManager.instance.RegisterHookUsed();
+                    AnalyticsManager.instance.RegisterHookActivated(currentHookPoint.HookId, currentHookPoint.SectionId, "success", true);
                 }
                 catch (Exception e)
                 {

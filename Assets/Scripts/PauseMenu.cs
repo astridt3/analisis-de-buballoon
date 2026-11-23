@@ -38,13 +38,32 @@ public class PauseMenu : MonoBehaviour
         Time.timeScale = 1f;
         juegoPausado = false;
     }
+
     public void GoToMenu(string nombreEscenaMenu)
     {
+        RegisterAbandonedAttempt();
+
         Time.timeScale = 1f;
         SceneManager.LoadScene("Main Menu");
     }
+
     public void Quit()
     {
+        RegisterAbandonedAttempt();
+
         Application.Quit();
+    }
+
+    private void RegisterAbandonedAttempt()
+    {
+        CharacterBehaviour character = FindObjectOfType<CharacterBehaviour>();
+
+        if (character == null || character.healthManager == null)
+            return;
+
+        if (AnalyticsManager.instance == null)
+            return;
+
+        AnalyticsManager.instance.EndLevelAttempt("abandoned", character.transform.position, character.GetCurrentSectionId(), Mathf.RoundToInt(character.healthManager.currentHealth));
     }
 }

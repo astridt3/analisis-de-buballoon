@@ -14,6 +14,8 @@ public class HealthManager : MonoBehaviour
     [SerializeField] private AudioClip hurt2;
     private CharacterBehaviour character;
 
+    private string lastDamageCause;
+
     void Start()
     {
         currentHealth = maxHealth;
@@ -25,13 +27,17 @@ public class HealthManager : MonoBehaviour
         character = GetComponent<CharacterBehaviour>();
     }
 
-    public void TakeDamage(float amount, bool fromLava)
+    public void TakeDamage(float amount, bool fromLava, string causeId)
     {
+        lastDamageCause = causeId;
         currentHealth -= amount;
         Debug.Log($"Vida actual: {currentHealth}");
         AudioClip selectedClip = (UnityEngine.Random.Range(0, 2) == 0) ? hurt1 : hurt2;
         SoundManager.instance.PlaySound(selectedClip);
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
+
+        AnalyticsManager.instance.RegisterLastAction("life_lost");
+
         heartManager.UpdateHeartUI((int)currentHealth);
 
         if (currentHealth <= 0)
@@ -58,7 +64,9 @@ public class HealthManager : MonoBehaviour
     {
         try
         {
-            AnalyticsManager.instance.RegisterPlayerDeath(character.transform.position);
+            int livesRemaining = Mathf.Max(0, 2 - respawnCount);
+
+            AnalyticsManager.instance.RegisterPlayerDeath(lastDamageCause, character.GetCurrentSectionId(), character.transform.position, livesRemaining);
             AnalyticsManager.instance.RegisterPlayersMaxTime(character.transform.position);
         }
         catch (Exception e)
@@ -68,6 +76,8 @@ public class HealthManager : MonoBehaviour
 
         if (respawnCount >= 2)
         {
+            AnalyticsManager.instance.EndLevelAttempt("defeated", character.transform.position, character.GetCurrentSectionId(), Mathf.RoundToInt(currentHealth));
+
             Time.timeScale = 0;
             derrota.SetActive(true);
             Debug.Log("Jugador ha muerto definitivamente");
@@ -78,7 +88,8 @@ public class HealthManager : MonoBehaviour
 
         try
         {
-            AnalyticsManager.instance.RegisterLifeLost();
+            AnalyticsManager.instance.RegisterLifeLost(lastDamageCause, character.GetCurrentSectionId(), character.transform.position, 
+                Mathf.Max(0, 2 - respawnCount));
         }
         catch (Exception e)
         {

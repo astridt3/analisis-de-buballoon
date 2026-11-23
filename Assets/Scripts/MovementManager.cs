@@ -89,6 +89,7 @@ public class MovementManager : MonoBehaviour
                     try
                     {
                         AnalyticsManager.instance.RegisterBubbleUsed();
+                        AnalyticsManager.instance.RegisterBalloonActivated(characterBehaviour.GetCurrentSectionId(), player.transform.position);
                     }
                     catch (Exception e)
                     {

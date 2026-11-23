@@ -46,7 +46,7 @@ public class Selector : MonoBehaviour
  
     public void GoToScene1()
     {
-        RegisterLevelSelectTime();
+        RegisterLevelSelectTime("level_1");
 
         AnalyticsManager.instance.ResetAttemptData();
         MedalManager.instance.ResetCoins();
@@ -55,7 +55,7 @@ public class Selector : MonoBehaviour
 
     public void GoToMenu()
     {
-        RegisterLevelSelectTime();
+        RegisterLevelSelectTime("main_menu");
         SceneManager.LoadScene("Main Menu");
     }
 
@@ -71,14 +71,14 @@ public class Selector : MonoBehaviour
       
     }
 
-    private void RegisterLevelSelectTime()
+    private void RegisterLevelSelectTime(string selectedLevelId)
     {
         if (!levelSelectTimerRunning)
             return;
 
         float elapsedTime = Time.realtimeSinceStartup - levelSelectStartTime;
 
-        AnalyticsManager.instance.RegisterLevelSelectTime(elapsedTime);
+        AnalyticsManager.instance.RegisterLevelSelectionCompleted(selectedLevelId, elapsedTime);
 
         levelSelectTimerRunning = false;
     }

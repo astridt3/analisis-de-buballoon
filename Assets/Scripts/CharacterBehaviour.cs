@@ -67,24 +67,22 @@ public class CharacterBehaviour : MonoBehaviour
     {
         float playerX = transform.position.x;
 
-        // Checkpoint 1
-        if (!checkpoint1Reached && !checkpoint1Skipped &&
-            playerX > checkpoint1.transform.position.x + skipDetectionOffset)
+        // Checkpoint 1 omitido: el siguiente es CP2.
+        if (!checkpoint1Reached && !checkpoint1Skipped && playerX > checkpoint1.transform.position.x + skipDetectionOffset)
         {
             checkpoint1Skipped = true;
 
-            AnalyticsManager.instance.RegisterCheckpointSkipped(1);
+            AnalyticsManager.instance.RegisterCheckpointSkipped(1, 2, transform.position);
 
             Debug.Log("Checkpoint 1 omitido");
         }
 
-        // Checkpoint 2
-        if (!checkpoint2Reached && !checkpoint2Skipped &&
-            playerX > checkpoint2.transform.position.x + skipDetectionOffset)
+        // Checkpoint 2 omitido: no existe otro checkpoint.
+        if (!checkpoint2Reached && !checkpoint2Skipped && playerX > checkpoint2.transform.position.x + skipDetectionOffset)
         {
             checkpoint2Skipped = true;
 
-            AnalyticsManager.instance.RegisterCheckpointSkipped(2);
+            AnalyticsManager.instance.RegisterCheckpointSkipped(2, 0, transform.position);
 
             Debug.Log("Checkpoint 2 omitido");
         }
@@ -123,7 +121,7 @@ public class CharacterBehaviour : MonoBehaviour
 
         if (collision.gameObject.CompareTag("Obstacle"))
         {
-            healthManager.TakeDamage(1, false);
+            healthManager.TakeDamage(1, false, "obstacle");
             impulse = 5;
             Vector2 direccion = (transform.position - collision.transform.position).normalized;
             rb.AddForce(direccion * impulse, ForceMode2D.Impulse);
@@ -134,10 +132,18 @@ public class CharacterBehaviour : MonoBehaviour
             //}
             //impulse = 10;
         }
-        
+
         if (collision.gameObject.CompareTag("Bubble"))
         {
-            healthManager.TakeDamage(1, false);
+            SodaBubble bubble = collision.gameObject.GetComponent<SodaBubble>();
+
+            if (bubble != null)
+            {
+                AnalyticsManager.instance.RegisterGreenBubble(bubble.BubbleId, GetCurrentSectionId(), true, transform.position);
+            }
+
+            healthManager.TakeDamage(1, false, "bubble");
+
             Vector2 direccion = Vector2.up;
             isGrounded = false;
             rb.velocity = Vector2.zero;
@@ -149,6 +155,7 @@ public class CharacterBehaviour : MonoBehaviour
             levelFinished = true;
 
             AnalyticsManager.instance.RegisterSectorCompleted(3);
+            AnalyticsManager.instance.EndLevelAttempt("completed", transform.position, GetCurrentSectionId(), Mathf.RoundToInt(healthManager.currentHealth));
 
             Time.timeScale = 0;
             victoria.SetActive(true);
@@ -202,7 +209,7 @@ public class CharacterBehaviour : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Lava"))
         {
-            healthManager.TakeDamage(1, true);
+            healthManager.TakeDamage(1, true, "lava");
         }
 
         if (collision.gameObject.CompareTag("Checkpoint"))
@@ -255,15 +262,40 @@ public class CharacterBehaviour : MonoBehaviour
         switch (flag.CheckpointId)
         {
             case 1:
+                if (checkpoint1Reached) return;
+
                 checkpoint1Reached = true;
+
+                AnalyticsManager.instance.RegisterCheckpointReached(1, "start_to_cp1");
+
                 AnalyticsManager.instance.RegisterSectorCompleted(1);
+                AnalyticsManager.instance.RegisterLastCheckpoint(1);
+                AnalyticsManager.instance.RegisterSectionReached("cp1_to_cp2");
                 break;
 
             case 2:
+                if (checkpoint2Reached) return;
+
                 checkpoint2Reached = true;
+
+                AnalyticsManager.instance.RegisterCheckpointReached(2, "cp1_to_cp2");
+
+                AnalyticsManager.instance.RegisterLastCheckpoint(2);
+                AnalyticsManager.instance.RegisterSectionReached("cp2_to_goal");
                 AnalyticsManager.instance.RegisterSectorCompleted(2);
                 break;
         }
+    }
+
+    public string GetCurrentSectionId()
+    {
+        if (checkpoint2Reached || checkpoint2Skipped)
+            return "cp2_to_goal";
+
+        if (checkpoint1Reached || checkpoint1Skipped)
+            return "cp1_to_cp2";
+
+        return "start_to_cp1";
     }
 }
 

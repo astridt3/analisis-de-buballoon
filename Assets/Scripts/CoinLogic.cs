@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class CoinLogic : MonoBehaviour
 {
+    [SerializeField] private int bowId;
+
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag("Player"))
@@ -11,7 +13,8 @@ public class CoinLogic : MonoBehaviour
             // analytic event register
             try
             {
-                AnalyticsManager.instance.RegisterBowCollected();
+                CharacterBehaviour character = collision.GetComponent<CharacterBehaviour>();
+                AnalyticsManager.instance.RegisterBowCollected(bowId, character.GetCurrentSectionId(), character.transform.position);
             }
             catch (Exception e)
             {
